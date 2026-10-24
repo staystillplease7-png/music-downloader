@@ -6,6 +6,10 @@ saves it in `Artist/Album/` with correct tags and cover art.
 
 Made for a home server: it runs as one small Flask service and works fine from a phone over Tailscale.
 
+![Album page](docs/album.png)
+
+![Start screen](docs/start.png)
+
 ## What it does
 
 - **Start from MusicBrainz.** Paste a release link or ID. The album loads by itself, with its track list,
