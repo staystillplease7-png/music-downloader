@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>BOSS-ARMY Downloader</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">BOSS-ARMY</a>
+    <nav class="topnav" aria-label="Pages">
+      <a href="#" data-nav="albums">Albums</a>
+      <a href="#history" data-nav="history">History</a>
+      {% if mympd_url %}<a class="player-link" href="{{ mympd_url }}" target="_blank" rel="noopener">Open player</a>{% endif %}
+    </nav>
+  </header>
+
+  <main class="page">
+
+    <!-- Screen 1: ask for the album -->
+    <section id="start" class="start">
+      <h1>Which album?</h1>
+      <p class="lead">Paste a MusicBrainz release link or ID. It loads by itself.</p>
+      <input id="release-input" class="id-input" type="text" spellcheck="false" autocomplete="off"
+             autocapitalize="off" placeholder="d2c29f31-4cf2-4af8-9f30-f27a9f24f810" aria-label="MusicBrainz release link or ID">
+      <p id="start-msg" class="start-msg" role="status" aria-live="polite"></p>
+
+      <div id="active-banner" class="active-banner" hidden>
+        <span id="active-text"></span>
+        <a href="#history">See progress</a>
+      </div>
+
+      <div id="albums" class="albums" hidden>
+        <button id="albums-toggle" class="albums-toggle" type="button" aria-expanded="false" aria-controls="albums-body">
+          <span class="albums-title">Your albums</span>
+          <span id="albums-count" class="albums-count"></span>
+          <svg class="albums-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div id="albums-body" class="albums-body" hidden>
+          <label class="albums-search">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.5 12.5L17 17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input id="albums-search" type="search" placeholder="Search by album or artist" autocomplete="off" spellcheck="false" aria-label="Search your albums">
+          </label>
+          <ul id="albums-list" class="albums-list"></ul>
+          <p id="albums-none" class="albums-none" hidden>No albums match.</p>
+        </div>
+      </div>
+
+      <details class="howto">
+        <summary>Where do I find the ID?</summary>
+        <p>Search the album on musicbrainz.org and open one edition (a release). Copy the address
+        from the browser bar, or the long code at the end of it. The page needs a release, not a
+        release group.</p>
+      </details>
+    </section>
+
+    <!-- Screen 2: the album and its tracks -->
+    <section id="album" hidden>
+      <div class="hero">
+        <div class="hero-glow" aria-hidden="true"><div id="hero-bg" class="hero-bg"></div></div>
+        <div id="cover-wrap" class="cover-wrap is-empty">
+          <img id="cover" alt="Album cover" width="500" height="500">
+          <svg class="cover-fallback" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16.5" cy="16" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </div>
+        <div class="hero-text">
+          <button id="change-album" class="change-link" type="button">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Change album
+          </button>
+          <h2 id="album-title"></h2>
+          <p id="album-artist" class="album-artist"></p>
+          <p id="album-facts" class="album-facts"></p>
+          <p id="album-summary" class="album-summary"></p>
+          <div class="find-row">
+            <button id="find-btn" class="btn btn-primary find-btn" type="button">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12.5 12.5L17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span id="find-label">Find links</span>
+            </button>
+            <span id="find-hint" class="find-hint">Searches YouTube for the empty tracks. Official uploads first.</span>
+          </div>
+          <div id="genre" class="genre">
+            <div class="genre-head">
+              <span class="genre-label">Genre</span>
+              <span id="genre-hint" class="genre-hint" role="status" aria-live="polite"></span>
+            </div>
+            <div id="genre-chips" class="genre-chips"></div>
+            <div class="genre-add">
+              <input id="genre-input" class="genre-input" type="text" list="genre-list" maxlength="40"
+                     placeholder="Add another genre" autocomplete="off" spellcheck="false" aria-label="Add a genre">
+              <datalist id="genre-list"></datalist>
+              <button id="genre-add" class="genre-add-btn" type="button">Add</button>
+            </div>
+            <div id="genre-apply" class="genre-apply" hidden>
+              <span id="genre-apply-text"></span>
+              <button id="genre-apply-btn" class="btn btn-ghost" type="button">Update them</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tracks" class="tracks"></div>
+    </section>
+  <!-- History: what finished, and what is downloading now -->
+  <section id="history" class="history" hidden>
+    <h1>History</h1>
+    <div id="hist-active" class="hist-active" hidden>
+      <h2>Downloading now</h2>
+      <ul id="hist-active-list" class="hist-active-list"></ul>
+    </div>
+    <div class="hist-filters" role="group" aria-label="Show">
+      <button type="button" class="genre-pick" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="genre-pick" data-filter="saved" aria-pressed="false">Saved</button>
+      <button type="button" class="genre-pick" data-filter="failed" aria-pressed="false">Failed</button>
+    </div>
+    <div id="hist-list" class="hist-list"></div>
+    <p id="hist-empty" class="hist-empty" hidden></p>
+  </section>
+  </main>
+
+  <!-- Bottom bar: always in reach on long albums -->
+  <div id="bar" class="bar" hidden>
+    <div class="bar-inner">
+      <div class="bar-text">
+        <span id="bar-count" class="bar-count">Nothing selected</span>
+        <span id="bar-queue" class="bar-queue"></span>
+      </div>
+      <div class="bar-actions">
+        <button id="bar-cancel" class="btn btn-ghost" type="button" hidden>Cancel all</button>
+        <button id="bar-go" class="btn btn-primary" type="button" disabled>Download selected</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

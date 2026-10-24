@@ -1,0 +1,16 @@
+# your own data, never commit these
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# scratch and backups
+*.bak
+backend_paste.txt
+.env
